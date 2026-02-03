@@ -13,5 +13,5 @@ $ pip install -r ./requirements.txt
 Rename `./src/config.example.py` to `./src/config.py` and add yout [API key](https://huggingface.co/docs/hub/en/security-tokens) for Hugging Face.
 
 ```bash
-$ python3 ./src/matcher.py -o output.json input.json
+$ python3 ./src/matcher.py -o ./data/output.json ./data/input.json
 ```
