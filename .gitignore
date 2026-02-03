@@ -1,8 +1,8 @@
 # .py files
 __pycache__
 
-# configuration files
-src/config.py
+# ignore .env file
+.env
 
 # database files
 *.db

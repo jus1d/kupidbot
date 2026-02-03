@@ -15,6 +15,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from config import HF_TOKEN
+from database import User
 
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 logging.getLogger("transformers").setLevel(logging.ERROR)
@@ -22,14 +23,6 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 
 Pair: TypeAlias = tuple[int, int, float]
 Preferences: TypeAlias = dict[int, set[str]]
-
-
-@dataclass
-class User:
-    username: str
-    sex: str
-    interests: str
-    free_time: str
 
 
 @dataclass
@@ -76,28 +69,46 @@ def parse_users_from_json(path: str) -> list[User]:
     with open(path) as f:
         data = json.load(f)
 
-    return [User(**user_data) for user_data in data["users"]]
+    users = []
+    for i, u in enumerate(data["users"]):
+        users.append(
+            User(
+                id=i,
+                telegram_id=0,
+                username=u.get("username"),
+                first_name=None,
+                last_name=None,
+                is_bot=False,
+                language_code=None,
+                is_premium=False,
+                sex=u.get("sex"),
+                about=u.get("about") or u.get("interests", ""),
+                state="completed",
+                time_ranges=u.get("time_ranges") or u.get("free_time", "000000"),
+            )
+        )
+    return users
 
 
-def write_pairs_as_json(pairs: list[Pair], path: str):
+def write_pairs_as_json(pairs: list[Pair], users: list[User], path: str):
     output = [
         {
             "a": {
                 "username": users[i].username,
                 "sex": users[i].sex,
-                "interests": users[i].interests,
-                "free_time": users[i].free_time,
+                "about": users[i].about,
+                "time_ranges": users[i].time_ranges,
             },
             "b": {
                 "username": users[j].username,
                 "sex": users[j].sex,
-                "interests": users[j].interests,
-                "free_time": users[j].free_time,
+                "about": users[j].about,
+                "time_ranges": users[j].time_ranges,
             },
             "score": score,
-            "free_time": pair_free_time,
+            "time_intersection": pair_time,
         }
-        for i, j, score, pair_free_time in pairs
+        for i, j, score, pair_time in pairs
     ]
 
     with open(path, "w") as f:
@@ -109,7 +120,7 @@ def extract_preferences(users: list[User]) -> Preferences:
     pattern = r"@(\w+)"
 
     for i, user in enumerate(users):
-        mentions = re.findall(pattern, user.interests)
+        mentions = re.findall(pattern, user.about or "")
         if mentions:
             preferences[i] = set(mentions)
 
@@ -122,8 +133,8 @@ def match_people(users: list[User]) -> list[Pair]:
         token=HF_TOKEN,
     )
 
-    interests = [u.interests for u in users]
-    vectors = model.encode(interests)
+    abouts = [u.about or "" for u in users]
+    vectors = model.encode(abouts)
 
     sim_matrix = cosine_similarity(vectors)
 
@@ -133,7 +144,7 @@ def match_people(users: list[User]) -> list[Pair]:
     used = set()
     pairs = []
 
-    n = len(interests)
+    n = len(abouts)
     for i in range(n):
         if i in used:
             continue
@@ -150,17 +161,17 @@ def match_people(users: list[User]) -> list[Pair]:
             b_wants_a = j in preferences and a.username in preferences[j]
 
             if a_wants_b and b_wants_a:  # full match
-                pair_free_time = "".join(
+                pair_time = "".join(
                     "1"
-                    if users[i].free_time[k] == "1" and users[j].free_time[k] == "1"
+                    if users[i].time_ranges[k] == "1" and users[j].time_ranges[k] == "1"
                     else "0"
                     for k in range(6)
                 )
 
                 score = float(sim_matrix[i, j])
 
-                if "1" in pair_free_time:
-                    pairs.append((i, j, round(score, 3), pair_free_time))
+                if "1" in pair_time:
+                    pairs.append((i, j, round(score, 3), pair_time))
                 else:
                     # TODO: исправить БЕДУ
                     pairs.append((i, j, round(score, 3), "БЕДА"))
@@ -191,18 +202,18 @@ def match_people(users: list[User]) -> list[Pair]:
             if a_wants_b or b_wants_a:  # semi-match
                 score += 0.3
 
-            pair_free_time = "".join(
-                "1" if a.free_time[k] == "1" and b.free_time[k] == "1" else "0"
+            pair_time = "".join(
+                "1" if a.time_ranges[k] == "1" and b.time_ranges[k] == "1" else "0"
                 for k in range(6)
             )
 
-            scores.append((score, i, j, pair_free_time))
+            scores.append((score, i, j, pair_time))
 
     scores.sort(reverse=True)
 
-    for score, i, j, pair_free_time in scores:
-        if i not in used and j not in used and "1" in pair_free_time:
-            pairs.append((i, j, round(score, 3), pair_free_time))
+    for score, i, j, pair_time in scores:
+        if i not in used and j not in used and "1" in pair_time:
+            pairs.append((i, j, round(score, 3), pair_time))
             used.add(i)
             used.add(j)
 
@@ -215,4 +226,4 @@ if __name__ == "__main__":
     users = parse_users_from_json(opts.input_path)
 
     pairs = match_people(users)
-    write_pairs_as_json(pairs, opts.output_path)
+    write_pairs_as_json(pairs, users, opts.output_path)

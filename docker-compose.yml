@@ -1,0 +1,12 @@
+services:
+  kupidbot:
+    image: ghcr.io/jus1d/kupidbot:latest
+    build: .
+    container_name: kupidbot
+    env_file:
+      - .env
+    environment:
+      - DB_PATH=/data/kupidbot.db
+    volumes:
+      - ./.db:/data
+    restart: unless-stopped

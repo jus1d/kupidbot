@@ -1,9 +1,26 @@
 import sqlite3
+from dataclasses import dataclass
 from typing import Optional
 
 
+@dataclass
+class User:
+    id: int
+    telegram_id: int
+    username: Optional[str]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    is_bot: bool
+    language_code: Optional[str]
+    is_premium: bool
+    sex: Optional[str]
+    about: str
+    state: str
+    time_ranges: str
+
+
 class Database:
-    def __init__(self, db_path: str = "valentines.db"):
+    def __init__(self, db_path: str = "kupidbot.db"):
         self.db_path = db_path
         self.init_db()
 
@@ -25,11 +42,22 @@ class Database:
                     last_name TEXT,
                     is_bot INTEGER NOT NULL DEFAULT 0,
                     language_code TEXT,
-                    is_premium INTEGER,
+                    is_premium INTEGER DEFAULT false,
                     sex TEXT,
-                    about TEXT,
+                    about TEXT DEFAULT '',
                     state TEXT NOT NULL DEFAULT 'start',
                     time_ranges TEXT NOT NULL DEFAULT '000000'
+                )
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pairs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    dill_id INTEGER NOT NULL,
+                    doe_id INTEGER NOT NULL,
+                    score REAL NOT NULL,
+                    time_intersection TEXT NOT NULL,
+                    FOREIGN KEY (dill_id) REFERENCES users(id),
+                    FOREIGN KEY (doe_id) REFERENCES users(id)
                 )
             """)
             conn.commit()
@@ -136,3 +164,47 @@ class Database:
             )
             row = cursor.fetchone()
             return row["state"] if row else "start"
+
+    def get_verified_users(self) -> list[User]:
+        """Get all users who completed verification."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM users WHERE state = 'completed'")
+            return [
+                User(
+                    id=row["id"],
+                    telegram_id=row["telegram_id"],
+                    username=row["username"],
+                    first_name=row["first_name"],
+                    last_name=row["last_name"],
+                    is_bot=bool(row["is_bot"]),
+                    language_code=row["language_code"],
+                    is_premium=bool(row["is_premium"])
+                    if row["is_premium"] is not None
+                    else None,
+                    sex=row["sex"],
+                    about=row["about"],
+                    state=row["state"],
+                    time_ranges=row["time_ranges"],
+                )
+                for row in cursor.fetchall()
+            ]
+
+    def clear_pairs(self) -> None:
+        """Delete all existing pairs."""
+        with self.get_connection() as conn:
+            conn.execute("DELETE FROM pairs")
+            conn.commit()
+
+    def save_pair(
+        self, dill_id: int, doe_id: int, score: float, time_intersection: str
+    ) -> None:
+        """Save a matched pair."""
+        with self.get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO pairs (dill_id, doe_id, score, time_intersection)
+                VALUES (?, ?, ?, ?)
+                """,
+                (dill_id, doe_id, score, time_intersection),
+            )
+            conn.commit()

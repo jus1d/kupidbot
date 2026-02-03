@@ -14,8 +14,9 @@ from telegram.ext import (
     filters,
 )
 
-from config import TELEGRAM_TOKEN
+from config import DB_PATH, TELEGRAM_TOKEN
 from database import Database
+from matcher import match_people
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -28,7 +29,7 @@ messages_path = Path(__file__).parent / "messages.yaml"
 with open(messages_path, encoding="utf-8") as f:
     MESSAGES = yaml.safe_load(f)
 
-db = Database()
+db = Database(DB_PATH)
 
 TIME_RANGES = [
     "10:00 -- 12:00",
@@ -190,10 +191,37 @@ async def time_button_callback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
     await query.edit_message_reply_markup(reply_markup=keyboard)
 
 
+async def match_command(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /match command - match all verified users into pairs."""
+    if not update.message:
+        return
+
+    users = db.get_verified_users()
+
+    if len(users) < 2:
+        await update.message.reply_text("Not enough verified users to match.")
+        return
+
+    pairs = match_people(users)
+
+    db.clear_pairs()
+
+    for i, j, score, time_intersection in pairs:
+        dill = users[i]
+        doe = users[j]
+
+        db.save_pair(dill.id, doe.id, score, time_intersection)
+
+    await update.message.reply_text(
+        f"Matching complete! Created {len(pairs)} pairs from {len(users)} users."
+    )
+
+
 def main() -> None:
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("match", match_command))
 
     application.add_handler(CallbackQueryHandler(sex_callback, pattern="^sex_"))
     application.add_handler(
