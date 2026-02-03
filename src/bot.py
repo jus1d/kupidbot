@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
+from pathlib import Path
 
+import yaml
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
@@ -21,6 +23,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
+
+messages_path = Path(__file__).parent / "messages.yaml"
+with open(messages_path, encoding="utf-8") as f:
+    MESSAGES = yaml.safe_load(f)
 
 db = Database()
 
@@ -65,7 +71,11 @@ def create_time_keyboard(
 
     if include_confirm:
         keyboard.append(
-            [InlineKeyboardButton("подтвердить", callback_data="confirm_time")]
+            [
+                InlineKeyboardButton(
+                    MESSAGES["buttons"]["confirm"], callback_data="confirm_time"
+                )
+            ]
         )
 
     return InlineKeyboardMarkup(keyboard)
@@ -90,20 +100,22 @@ async def start(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
 
     db.set_user_state(user.id, "awaiting_sex")
 
-    await update.message.reply_text(
-        "привет! я помогу тебе найти пару на 14 февраля\n\nдавай знакомиться"
-    )
+    await update.message.reply_text(MESSAGES["start"]["welcome"])
 
     keyboard = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("мужской", callback_data="sex_male"),
-                InlineKeyboardButton("женский", callback_data="sex_female"),
+                InlineKeyboardButton(
+                    MESSAGES["buttons"]["sex"]["male"], callback_data="sex_male"
+                ),
+                InlineKeyboardButton(
+                    MESSAGES["buttons"]["sex"]["female"], callback_data="sex_female"
+                ),
             ]
         ]
     )
 
-    await update.message.reply_text("твой пол:", reply_markup=keyboard)
+    await update.message.reply_text(MESSAGES["start"]["ask_sex"], reply_markup=keyboard)
 
 
 async def sex_callback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -120,12 +132,7 @@ async def sex_callback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     db.set_user_sex(user.id, sex)
     db.set_user_state(user.id, "awaiting_about")
 
-    sex_text = "мужской" if sex == "male" else "женский"
-    await query.edit_message_text(
-        f"пол: {sex_text} — записал\n\n"
-        f"теперь расскажи немного о себе: чем увлекаешься, что любишь делать. "
-        f"пара предложений хватит"
-    )
+    await query.edit_message_text(MESSAGES["sex_selected"])
 
 
 async def text_message_handler(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -145,9 +152,7 @@ async def text_message_handler(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
         keyboard = create_time_keyboard(selected_times)
 
         await update.message.reply_text(
-            "отлично, принял\n\n"
-            "теперь выбери удобные промежутки для свидания. можно несколько\n\n"
-            "важно: встреча будет назначена минимум за полчаса до конца выбранного слота",
+            MESSAGES["about_received"]["message"],
             reply_markup=keyboard,
         )
 
@@ -164,10 +169,7 @@ async def time_button_callback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
 
     if query.data == "confirm_time":
         db.set_user_state(user.id, "completed")
-        await query.edit_message_text(
-            "готово! регистрация завершена\n\n"
-            "14 февраля напишу тебе время и место встречи"
-        )
+        await query.edit_message_text(MESSAGES["completed"]["message"])
         return
 
     time_range = query.data.replace("time_", "")
