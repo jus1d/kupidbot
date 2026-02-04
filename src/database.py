@@ -69,6 +69,12 @@ class Database:
                     FOREIGN KEY (doe_id) REFERENCES users(id)
                 )
             """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS places (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    description TEXT NOT NULL
+                )
+            """)
             conn.commit()
 
     def save_user(
@@ -246,3 +252,18 @@ class Database:
                 (dill_id, doe_id, score, time_intersection),
             )
             conn.commit()
+
+    def save_place(self, description: str) -> None:
+        """Save a new place."""
+        with self.get_connection() as conn:
+            conn.execute(
+                "INSERT INTO places (description) VALUES (?)",
+                (description,),
+            )
+            conn.commit()
+
+    def get_all_places(self) -> list[sqlite3.Row]:
+        """Get all places."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM places")
+            return cursor.fetchall()
