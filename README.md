@@ -4,18 +4,12 @@
 
 > You can build image locally: `docker build -t ghcr.io/jus1d/kypidbot:latest .` or pull it from `ghcr.io`: `docker pull ghcr.io/jus1d/kypidbot:latest`
 
-Fill up the `.env` file and run the bot
+Fill up the config in `./config` and set environment variables: `CONFIG_PATH` -- where config for the bot is located, `POSTGRES_PASSWORD` -- password, with which postgres will start
 
 Pull model for  vectorizing abouts
 
 ```bash
 $ docker exec ollama ollama pull paraphrase-multilingual
-```
-
-Export `POSTGRES_PASSWORD` env variable
-
-```bash
-$ export POSTGRES_PASSWORD=kypidbot
 ```
 
 Run compose
