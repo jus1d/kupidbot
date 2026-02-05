@@ -65,6 +65,7 @@ class Database:
                     doe_id INTEGER NOT NULL,
                     score REAL NOT NULL,
                     time_intersection TEXT NOT NULL,
+                    is_fullmatch INTEGER DEFAULT 0,
                     FOREIGN KEY (dill_id) REFERENCES users(id),
                     FOREIGN KEY (doe_id) REFERENCES users(id)
                 )
@@ -252,18 +253,30 @@ class Database:
             conn.commit()
 
     def save_pair(
-        self, dill_id: int, doe_id: int, score: float, time_intersection: str
+        self, dill_id: int, doe_id: int, score: float, time_intersection: str, is_fullmatch: bool = False
     ) -> None:
         """Save a matched pair."""
         with self.get_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO pairs (dill_id, doe_id, score, time_intersection)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO pairs (dill_id, doe_id, score, time_intersection, is_fullmatch)
+                VALUES (?, ?, ?, ?, ?)
                 """,
-                (dill_id, doe_id, score, time_intersection),
+                (dill_id, doe_id, score, time_intersection, 1 if is_fullmatch else 0),
             )
             conn.commit()
+
+    def get_full_pairs(self) -> list[sqlite3.Row]:
+        """Get all full pairs (full-match without time intersection)."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM pairs WHERE is_fullmatch = 1")
+            return cursor.fetchall()
+
+    def get_regular_pairs(self) -> list[sqlite3.Row]:
+        """Get all regular pairs (with time intersection)."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM pairs WHERE is_fullmatch = 0")
+            return cursor.fetchall()
 
     def save_place(self, description: str) -> None:
         """Save a new place."""

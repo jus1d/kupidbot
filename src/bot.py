@@ -417,7 +417,7 @@ async def match_command(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         "CAACAgIAAxkBAANtaYKDDtR5d1478iPkCrZr2xnZOpMAAgIBAAJWnb0KTuJsgctA5P84BA"
     )
 
-    pairs = match_people(users)
+    pairs, full_matches = match_people(users)
 
     db.clear_pairs()
 
@@ -425,10 +425,20 @@ async def match_command(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         dill = users[i]
         doe = users[j]
 
-        db.save_pair(dill.id, doe.id, score, time_intersection)
+        db.save_pair(dill.id, doe.id, score, time_intersection, is_fullmatch=False)
+
+    for i, j, score in full_matches:
+        dill = users[i]
+        doe = users[j]
+
+        db.save_pair(dill.id, doe.id, score, "000000", is_fullmatch=True)
 
     await sticker_msg.delete()
-    await update.message.reply_text(MESSAGES["match"]["success"].format(pairs=len(pairs), users=len(users)))
+
+    full_info = f"\n\nполных совпадений (без общего времени): {len(full_matches)}" if full_matches else ""
+    await update.message.reply_text(
+        MESSAGES["match"]["success"].format(pairs=len(pairs), users=len(users), full_info=full_info)
+    )
 
 
 @admin_only
@@ -437,18 +447,21 @@ async def meet_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if not update.message or not context.bot:
         return
 
-    pairs = db.get_all_pairs()
-    if not pairs:
+    regular_pairs = db.get_regular_pairs()
+    fullmatch_pairs = db.get_full_pairs()
+
+    if not regular_pairs and not fullmatch_pairs:
         await update.message.reply_text(MESSAGES["meet"]["no_pairs"])
         return
 
     places = db.get_all_places()
-    if not places:
+    if not places and regular_pairs:
         await update.message.reply_text(MESSAGES["meet"]["no_places"])
         return
 
     count = 0
-    for pair in pairs:
+
+    for pair in regular_pairs:
         place = random.choice(places)
         meeting_time = pick_random_time(pair["time_intersection"])
 
@@ -493,6 +506,33 @@ async def meet_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 )
             except Exception as e:
                 logger.error(f"Failed to send message to {doe['telegram_id']}: {e}")
+
+            count += 1
+
+    for pair in fullmatch_pairs:
+        dill = db.get_user_by_id(pair["dill_id"])
+        doe = db.get_user_by_id(pair["doe_id"])
+
+        if dill and doe:
+            try:
+                await context.bot.send_message(
+                    chat_id=dill["telegram_id"],
+                    text=MESSAGES["meet"]["full_match"].format(
+                        partner_username=doe["username"] or "unknown"
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to send full match to {dill['telegram_id']}: {e}")
+
+            try:
+                await context.bot.send_message(
+                    chat_id=doe["telegram_id"],
+                    text=MESSAGES["meet"]["full_match"].format(
+                        partner_username=dill["username"] or "unknown"
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to send full match to {doe['telegram_id']}: {e}")
 
             count += 1
 

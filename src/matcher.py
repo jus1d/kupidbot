@@ -22,6 +22,7 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 
 
 Pair: TypeAlias = tuple[int, int, float, str]
+FullMatch: TypeAlias = tuple[int, int, float]
 Preferences: TypeAlias = dict[int, set[str]]
 
 
@@ -127,7 +128,7 @@ def extract_preferences(users: list[User]) -> Preferences:
     return preferences
 
 
-def match_people(users: list[User]) -> list[Pair]:
+def match_people(users: list[User]) -> tuple[list[Pair], list[FullMatch]]:
     model = SentenceTransformer(
         "paraphrase-multilingual-MiniLM-L12-v2",
         token=HF_TOKEN,
@@ -143,6 +144,7 @@ def match_people(users: list[User]) -> list[Pair]:
     # firstly -- match people with mutual sympathy
     used = set()
     pairs = []
+    full_matches = []
 
     n = len(abouts)
     for i in range(n):
@@ -173,8 +175,7 @@ def match_people(users: list[User]) -> list[Pair]:
                 if "1" in pair_time:
                     pairs.append((i, j, round(score, 3), pair_time))
                 else:
-                    # TODO: исправить БЕДУ
-                    pairs.append((i, j, round(score, 3), "БЕДА"))
+                    full_matches.append((i, j, round(score, 3)))
 
                 used.add(i)
                 used.add(j)
@@ -217,7 +218,7 @@ def match_people(users: list[User]) -> list[Pair]:
             used.add(i)
             used.add(j)
 
-    return pairs
+    return pairs, full_matches
 
 
 if __name__ == "__main__":
@@ -225,5 +226,5 @@ if __name__ == "__main__":
 
     users = parse_users_from_json(opts.input_path)
 
-    pairs = match_people(users)
+    pairs, full_matches = match_people(users)
     write_pairs_as_json(pairs, users, opts.output_path)
