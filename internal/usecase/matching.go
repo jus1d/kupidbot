@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jus1d/kypidbot/internal/config"
 	"github.com/jus1d/kypidbot/internal/domain"
 	"github.com/jus1d/kypidbot/internal/matcher"
 )
 
 type MatchResult struct {
-	PairsCount      int
-	FullMatchCount  int
-	UsersCount      int
+	PairsCount     int
+	FullMatchCount int
+	UsersCount     int
 }
 
 type Matching struct {
@@ -20,11 +21,11 @@ type Matching struct {
 	url   string
 }
 
-func NewMatching(users domain.UserRepository, pairs domain.PairRepository, ollamaURL string) *Matching {
+func NewMatching(users domain.UserRepository, pairs domain.PairRepository, c *config.Ollama) *Matching {
 	return &Matching{
 		users: users,
 		pairs: pairs,
-		url:   ollamaURL,
+		url:   fmt.Sprintf("%s:%s", c.Host, c.Port),
 	}
 }
 

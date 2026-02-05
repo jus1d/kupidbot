@@ -3,10 +3,10 @@ services:
     image: ghcr.io/jus1d/kypidbot:latest
     build: .
     container_name: kypidbot
-    env_file:
-      - .env
     environment:
-      - OLLAMA_URL=http://ollama:11434
+      CONFIG_PATH: ${CONFIG_PATH}
+    volumes:
+      - ./config:/app/config
     restart: unless-stopped
     depends_on:
       postgres:

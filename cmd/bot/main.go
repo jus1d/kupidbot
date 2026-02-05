@@ -22,7 +22,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := postgres.New(cfg.DatabaseURL)
+	db, err := postgres.New(&cfg.Postgres)
 	if err != nil {
 		log.Error("open database", "err", err)
 		os.Exit(1)
@@ -36,11 +36,11 @@ func main() {
 
 	registration := usecase.NewRegistration(userRepo)
 	admin := usecase.NewAdmin(userRepo)
-	matching := usecase.NewMatching(userRepo, pairRepo, cfg.OllamaURL)
+	matching := usecase.NewMatching(userRepo, pairRepo, &cfg.Ollama)
 	meeting := usecase.NewMeeting(userRepo, pairRepo, placeRepo, meetingRepo)
 
 	bot, err := telegram.NewBot(
-		cfg.TelegramToken,
+		cfg.Telegram.Token,
 		registration,
 		admin,
 		matching,
