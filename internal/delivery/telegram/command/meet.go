@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
+	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
 	tele "gopkg.in/telebot.v3"
 )
 
 func (h *Handler) Meet(c tele.Context) error {
 	result, err := h.Meeting.CreateMeetings(context.Background())
 	if err != nil {
-		h.Log.Error("create meetings", "err", err)
+		h.Log.Error("create meetings", sl.Err(err))
 		if err.Error() == "no pairs" {
 			return c.Send(view.Msg("meet", "no_pairs"))
 		}
@@ -33,12 +34,12 @@ func (h *Handler) Meet(c tele.Context) error {
 
 		_, err := h.Bot.Send(&tele.User{ID: m.DillID}, message, kb)
 		if err != nil {
-			h.Log.Error("send meeting to dill", "err", err, "telegram_id", m.DillID)
+			h.Log.Error("send meeting to dill", sl.Err(err), "telegram_id", m.DillID)
 		}
 
 		_, err = h.Bot.Send(&tele.User{ID: m.DoeID}, message, kb)
 		if err != nil {
-			h.Log.Error("send meeting to doe", "err", err, "telegram_id", m.DoeID)
+			h.Log.Error("send meeting to doe", sl.Err(err), "telegram_id", m.DoeID)
 		}
 
 		count++
@@ -55,12 +56,12 @@ func (h *Handler) Meet(c tele.Context) error {
 
 		_, err := h.Bot.Send(&tele.User{ID: fm.DillTelegramID}, dillMsg)
 		if err != nil {
-			h.Log.Error("send full match to dill", "err", err, "telegram_id", fm.DillTelegramID)
+			h.Log.Error("send full match to dill", sl.Err(err), "telegram_id", fm.DillTelegramID)
 		}
 
 		_, err = h.Bot.Send(&tele.User{ID: fm.DoeTelegramID}, doeMsg)
 		if err != nil {
-			h.Log.Error("send full match to doe", "err", err, "telegram_id", fm.DoeTelegramID)
+			h.Log.Error("send full match to doe", sl.Err(err), "telegram_id", fm.DoeTelegramID)
 		}
 
 		count++

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
+	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
 	"github.com/jus1d/kypidbot/internal/usecase"
 	tele "gopkg.in/telebot.v3"
 )
@@ -26,7 +27,7 @@ func (h *Handler) Promote(c tele.Context) error {
 		case errors.Is(err, usecase.ErrAlreadyAdmin):
 			return c.Send(view.Msgf(map[string]string{"username": username}, "promote", "already_admin"))
 		default:
-			h.Log.Error("promote", "err", err)
+			h.Log.Error("promote", sl.Err(err))
 			return nil
 		}
 	}
@@ -50,7 +51,7 @@ func (h *Handler) Demote(c tele.Context) error {
 		case errors.Is(err, usecase.ErrNotAdmin):
 			return c.Send(view.Msgf(map[string]string{"username": username}, "demote", "not_admin"))
 		default:
-			h.Log.Error("demote", "err", err)
+			h.Log.Error("demote", sl.Err(err))
 			return nil
 		}
 	}

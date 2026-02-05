@@ -8,6 +8,7 @@ import (
 
 	"github.com/jus1d/kypidbot/internal/config"
 	"github.com/jus1d/kypidbot/internal/delivery/telegram"
+	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
 	"github.com/jus1d/kypidbot/internal/repository/postgres"
 	"github.com/jus1d/kypidbot/internal/usecase"
 )
@@ -18,16 +19,18 @@ func main() {
 	cfg := config.MustLoad()
 
 	if err := telegram.LoadMessages("messages.yaml"); err != nil {
-		log.Error("load messages", "err", err)
+		log.Error("failed load message replics", sl.Err(err))
 		os.Exit(1)
 	}
 
 	db, err := postgres.New(&cfg.Postgres)
 	if err != nil {
-		log.Error("open database", "err", err)
+		log.Error("postgresql: failed to connect", sl.Err(err))
 		os.Exit(1)
 	}
 	defer db.Close()
+
+	log.Info("postgresql: ok", sl.Err(err))
 
 	userRepo := postgres.NewUserRepo(db)
 	pairRepo := postgres.NewPairRepo(db)
@@ -49,7 +52,7 @@ func main() {
 		log,
 	)
 	if err != nil {
-		log.Error("create bot", "err", err)
+		log.Error("failed to create the bot", sl.Err(err))
 		os.Exit(1)
 	}
 
@@ -61,6 +64,6 @@ func main() {
 	go bot.Start()
 
 	<-stop
-	log.Info("shutting down")
+	log.Info("bot: shutting down...")
 	bot.Stop()
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
 	"github.com/jus1d/kypidbot/internal/domain"
+	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
 	tele "gopkg.in/telebot.v3"
 )
 
@@ -12,7 +13,7 @@ func (h *Handler) ConfirmTime(c tele.Context) error {
 	sender := c.Sender()
 
 	if err := h.Registration.SetState(context.Background(), sender.ID, "completed"); err != nil {
-		h.Log.Error("set state", "err", err)
+		h.Log.Error("set state", sl.Err(err))
 		return c.Respond()
 	}
 
@@ -25,7 +26,7 @@ func (h *Handler) Time(c tele.Context) error {
 
 	binaryStr, err := h.Registration.GetTimeRanges(context.Background(), sender.ID)
 	if err != nil {
-		h.Log.Error("get time ranges", "err", err)
+		h.Log.Error("get time ranges", sl.Err(err))
 		return c.Respond()
 	}
 
@@ -39,7 +40,7 @@ func (h *Handler) Time(c tele.Context) error {
 
 	newBinary := domain.SetToBinary(selected)
 	if err := h.Registration.SaveTimeRanges(context.Background(), sender.ID, newBinary); err != nil {
-		h.Log.Error("save time ranges", "err", err)
+		h.Log.Error("save time ranges", sl.Err(err))
 		return c.Respond()
 	}
 

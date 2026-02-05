@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
+	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
 	tele "gopkg.in/telebot.v3"
 )
 
@@ -14,7 +15,7 @@ func (h *Handler) Match(c tele.Context) error {
 	sticker := &tele.Sticker{File: tele.File{FileID: matchSticker}}
 	stickerMsg, err := h.Bot.Send(c.Chat(), sticker)
 	if err != nil {
-		h.Log.Error("send sticker", "err", err)
+		h.Log.Error("send sticker", sl.Err(err))
 	}
 
 	result, err := h.Matching.RunMatch(context.Background())
@@ -22,7 +23,7 @@ func (h *Handler) Match(c tele.Context) error {
 		if stickerMsg != nil {
 			_ = h.Bot.Delete(stickerMsg)
 		}
-		h.Log.Error("run match", "err", err)
+		h.Log.Error("run match", sl.Err(err))
 		return c.Send(view.Msg("match", "not_enough_users"))
 	}
 

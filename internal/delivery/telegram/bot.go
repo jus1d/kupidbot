@@ -107,7 +107,7 @@ func (b *Bot) Setup() {
 }
 
 func (b *Bot) Start() {
-	b.log.Info("starting bot")
+	b.log.Info("bot: ok")
 	b.bot.Start()
 }
 
