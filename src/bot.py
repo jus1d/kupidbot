@@ -30,10 +30,6 @@ with open(messages_path, encoding="utf-8") as f:
 
 db = Database(DB_PATH)
 
-# Users awaiting sticker recording (in-memory, dev tool)
-awaiting_sticker: set[int] = set()
-
-
 def admin_only(func):
     """Decorator to restrict command to admins only."""
 
@@ -145,7 +141,7 @@ async def start(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         ]
     )
 
-    await update.message.reply_text(MESSAGES["start"]["ask_sex"], reply_markup=keyboard)
+    await update.message.reply_text(MESSAGES["start"]["ask_sex"]['new'], reply_markup=keyboard)
 
 
 async def sex_callback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -195,8 +191,18 @@ async def time_button_callback(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
     user = query.from_user
 
     if query.data == "confirm_time":
+        resubmit_keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(
+                MESSAGES["buttons"]["resubmit"],
+                callback_data="resubmit"
+            )]
+        ])
+
         await db.set_user_state(user.id, "completed")
-        await query.edit_message_text(MESSAGES["completed"]["message"])
+        await query.edit_message_text(
+            text=MESSAGES["completed"]["message"],
+            reply_markup=resubmit_keyboard,
+        ) # here
         return
 
     time_range = query.data.replace("time_", "")
@@ -325,14 +331,29 @@ async def cancel_meeting_callback(update: Update, context: ContextTypes.DEFAULT_
                 logger.error(f"Failed to send cancellation to partner {partner_id}: {e}")
 
 
-@admin_only
-async def stickerid_command(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /stickerid command - wait for sticker and print its file_id."""
-    if not update.message or not update.effective_user:
+async def resubmit_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    if not query or not query.data or not query.from_user or not context.bot:
         return
 
-    awaiting_sticker.add(update.effective_user.id)
-    await update.message.reply_text(MESSAGES["stickerid"]["prompt"])
+    user = query.from_user
+
+    await db.set_user_state(user.id, "awaiting_sex")
+
+    keyboard = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    MESSAGES["buttons"]["sex"]["male"], callback_data="sex_male"
+                ),
+                InlineKeyboardButton(
+                    MESSAGES["buttons"]["sex"]["female"], callback_data="sex_female"
+                ),
+            ]
+        ]
+    )
+
+    await query.edit_message_text(MESSAGES["start"]["ask_sex"]["resubmit"], reply_markup=keyboard)
 
 
 @admin_only
@@ -341,11 +362,6 @@ async def sticker_handler(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not update.effective_user or not update.message.sticker:
         return
 
-    user_id = update.effective_user.id
-    if user_id not in awaiting_sticker:
-        return
-
-    awaiting_sticker.discard(user_id)
     sticker = update.message.sticker
     logger.info(f"Sticker file_id: {sticker.file_id}")
     await update.message.reply_text(f"```\n{sticker.file_id}\n```", parse_mode="Markdown")
@@ -551,7 +567,6 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("match", match_command))
     application.add_handler(CommandHandler("meet", meet_command))
-    application.add_handler(CommandHandler("stickerid", stickerid_command))
     application.add_handler(CommandHandler("promote", promote_command))
     application.add_handler(CommandHandler("demote", demote_command))
 
@@ -559,6 +574,7 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(time_button_callback, pattern="^(time_|confirm_time)"))
     application.add_handler(CallbackQueryHandler(confirm_meeting_callback, pattern="^confirm_meeting_"))
     application.add_handler(CallbackQueryHandler(cancel_meeting_callback, pattern="^cancel_meeting_"))
+    application.add_handler(CallbackQueryHandler(resubmit_callback, pattern="resubmit"))
 
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_message_handler))
     application.add_handler(MessageHandler(filters.Sticker.ALL, sticker_handler))
