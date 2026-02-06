@@ -30,11 +30,13 @@ func (h *Handler) ConfirmMeeting(c tele.Context) error {
 		return c.Respond()
 	}
 
+	_ = c.Delete()
+
 	kb := view.CancelKeyboard(fmt.Sprintf("%d", meetingID))
 	originalText := c.Message().Text
 	newText := originalText + "\n\n" + view.Msg("meet", "confirmed")
-	if err := c.Edit(newText, kb); err != nil {
-		slog.Error("edit message", sl.Err(err))
+	if _, err := h.Bot.Send(c.Chat(), newText, kb); err != nil {
+		slog.Error("send confirmed message", sl.Err(err))
 	}
 
 	partnerID, err := h.Meeting.GetPartnerTelegramID(context.Background(), meetingID, telegramID)
@@ -106,10 +108,10 @@ func (h *Handler) CancelMeeting(c tele.Context) error {
 		partnerUsername = "unknown"
 	}
 
-	if err := c.Edit(view.Msgf(map[string]string{
+	if err := h.DeleteAndSend(c, view.Msgf(map[string]string{
 		"partner_username": partnerUsername,
 	}, "meet", "cancelled")); err != nil {
-		slog.Error("edit message", sl.Err(err))
+		slog.Error("send cancelled message", sl.Err(err))
 	}
 
 	userUsername, _ := h.Users.GetUserUsername(context.Background(), telegramID)

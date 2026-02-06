@@ -17,5 +17,5 @@ func (h *Handler) Resubmit(c tele.Context) error {
 		return c.Respond()
 	}
 
-	return c.Edit(view.Msg("start", "ask_sex", "resubmit"), view.SexKeyboard())
+	return h.DeleteAndSend(c, view.Msg("start", "ask_sex", "resubmit"), view.SexKeyboard())
 }

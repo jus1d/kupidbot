@@ -28,5 +28,5 @@ func (h *Handler) Sex(c tele.Context) error {
 		return c.Respond()
 	}
 
-	return c.Edit(view.Msg("sex_selected"))
+	return h.DeleteAndSend(c, view.Msg("sex_selected"))
 }

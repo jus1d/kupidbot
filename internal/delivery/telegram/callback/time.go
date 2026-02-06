@@ -18,7 +18,7 @@ func (h *Handler) ConfirmTime(c tele.Context) error {
 		return c.Respond()
 	}
 
-	return c.Edit(view.Msg("completed", "message"), view.ResubmitKeyboard())
+	return h.DeleteAndSend(c, view.Msg("completed", "message"), view.ResubmitKeyboard())
 }
 
 func (h *Handler) Time(c tele.Context) error {
@@ -45,5 +45,5 @@ func (h *Handler) Time(c tele.Context) error {
 		return c.Respond()
 	}
 
-	return c.Edit(view.Msg("about_received", "message"), view.TimeKeyboard(selected))
+	return h.DeleteAndSend(c, view.Msg("about_received", "message"), view.TimeKeyboard(selected))
 }

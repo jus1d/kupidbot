@@ -37,7 +37,7 @@ func LogUpdates(next tele.HandlerFunc) tele.HandlerFunc {
 			case msg.Sticker != nil:
 				log.Debug("update recieved", slog.String("kind", "sticker"))
 			case msg.Text != "":
-				log.Debug("update recieved", slog.String("kind", "text"), slog.String("text", msg.Text))
+				log.Debug("update recieved", slog.String("kind", "text_message"), slog.String("content", msg.Text))
 			}
 		case c.Update().MessageReaction != nil:
 			log.Debug("update recieved", slog.String("kind", "reaction"))

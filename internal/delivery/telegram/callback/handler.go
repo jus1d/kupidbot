@@ -12,3 +12,8 @@ type Handler struct {
 	Users        domain.UserRepository
 	Bot          *tele.Bot
 }
+
+func (h *Handler) DeleteAndSend(c tele.Context, what any, opts ...any) error {
+	_ = c.Delete()
+	return c.Send(what, opts...)
+}
