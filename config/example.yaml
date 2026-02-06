@@ -1,7 +1,8 @@
 env: "local" # local, dev or prod
 
-telegram:
+bot:
   token: "telegram-token"
+  messages_path: "./messages/messages.yaml"
 
 ollama:
   host: "http://ollama"

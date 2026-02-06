@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/jus1d/kypidbot/internal/config/messages"
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
 	"github.com/jus1d/kypidbot/internal/domain"
 	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
@@ -32,9 +33,9 @@ func (h *Handler) Start(c tele.Context) error {
 		return nil
 	}
 
-	if err := c.Send(view.Msg("start", "welcome")); err != nil {
+	if err := c.Send(messages.M.Start.Welcome); err != nil {
 		return err
 	}
 
-	return c.Send(view.Msg("start", "ask_sex", "new"), view.SexKeyboard())
+	return c.Send(messages.M.Profile.Sex.AskNew, view.SexKeyboard())
 }

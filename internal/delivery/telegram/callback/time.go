@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/jus1d/kypidbot/internal/config/messages"
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
 	"github.com/jus1d/kypidbot/internal/domain"
 	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
@@ -18,7 +19,7 @@ func (h *Handler) ConfirmTime(c tele.Context) error {
 		return c.Respond()
 	}
 
-	return h.DeleteAndSend(c, view.Msg("completed", "message"), view.ResubmitKeyboard())
+	return h.DeleteAndSend(c, messages.M.Registration.Completed, view.ResubmitKeyboard())
 }
 
 func (h *Handler) Time(c tele.Context) error {
@@ -45,5 +46,5 @@ func (h *Handler) Time(c tele.Context) error {
 		return c.Respond()
 	}
 
-	return h.DeleteAndSend(c, view.Msg("about_received", "message"), view.TimeKeyboard(selected))
+	return c.Edit(messages.M.Profile.About.Accepted, view.TimeKeyboard(selected))
 }

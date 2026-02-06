@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/jus1d/kypidbot/internal/config/messages"
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
 	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
 	tele "gopkg.in/telebot.v3"
@@ -25,7 +26,7 @@ func (h *Handler) MM(c tele.Context) error {
 			_ = h.Bot.Delete(stickerMsg)
 		}
 		slog.Error("run match", sl.Err(err))
-		return c.Send(view.Msg("mm", "not_enough_users"))
+		return c.Send(messages.M.Matching.Errors.NotEnoughUsers)
 	}
 
 	if stickerMsg != nil {
@@ -37,11 +38,11 @@ func (h *Handler) MM(c tele.Context) error {
 		fullInfo = fmt.Sprintf("\n\nполных совпадений (без общего времени): %d", result.FullMatchCount)
 	}
 
-	if err := c.Send(view.Msgf(map[string]string{
+	if err := c.Send(messages.Format(messages.M.Matching.Success.Matched, map[string]string{
 		"pairs":     fmt.Sprintf("%d", result.PairsCount),
 		"users":     fmt.Sprintf("%d", result.UsersCount),
 		"full_info": fullInfo,
-	}, "mm", "matched")); err != nil {
+	})); err != nil {
 		slog.Error("send match result", sl.Err(err))
 	}
 
@@ -49,10 +50,10 @@ func (h *Handler) MM(c tele.Context) error {
 	if err != nil {
 		slog.Error("create meetings", sl.Err(err))
 		if err.Error() == "no pairs" {
-			return c.Send(view.Msg("mm", "no_pairs"))
+			return c.Send(messages.M.Matching.Errors.NoPairs)
 		}
 		if err.Error() == "no places" {
-			return c.Send(view.Msg("mm", "no_places"))
+			return c.Send(messages.M.Matching.Errors.NoPlaces)
 		}
 		return nil
 	}
@@ -60,10 +61,10 @@ func (h *Handler) MM(c tele.Context) error {
 	count := 0
 
 	for _, m := range meetResult.Meetings {
-		message := view.Msgf(map[string]string{
+		message := messages.Format(messages.M.Meeting.Invite.Message, map[string]string{
 			"place": m.Place,
 			"time":  m.Time,
-		}, "meet", "notification")
+		})
 
 		kb := view.MeetingKeyboard(fmt.Sprintf("%d", m.MeetingID))
 
@@ -81,13 +82,13 @@ func (h *Handler) MM(c tele.Context) error {
 	}
 
 	for _, fm := range meetResult.FullMatches {
-		dillMsg := view.Msgf(map[string]string{
+		dillMsg := messages.Format(messages.M.Meeting.Special.FullMatchNoTime, map[string]string{
 			"partner_username": fm.DoeUsername,
-		}, "meet", "full_match")
+		})
 
-		doeMsg := view.Msgf(map[string]string{
+		doeMsg := messages.Format(messages.M.Meeting.Special.FullMatchNoTime, map[string]string{
 			"partner_username": fm.DillUsername,
-		}, "meet", "full_match")
+		})
 
 		_, err := h.Bot.Send(&tele.User{ID: fm.DillTelegramID}, dillMsg)
 		if err != nil {
@@ -102,7 +103,7 @@ func (h *Handler) MM(c tele.Context) error {
 		count++
 	}
 
-	return c.Send(view.Msgf(map[string]string{
+	return c.Send(messages.Format(messages.M.Matching.Success.MeetingsSent, map[string]string{
 		"count": fmt.Sprintf("%d", count),
-	}, "mm", "success"))
+	}))
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/callback"
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/command"
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/message"
-	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
 	"github.com/jus1d/kypidbot/internal/domain"
 	"github.com/jus1d/kypidbot/internal/usecase"
 	tele "gopkg.in/telebot.v3"
@@ -20,10 +19,6 @@ type Bot struct {
 	matching     *usecase.Matching
 	meeting      *usecase.Meeting
 	users        domain.UserRepository
-}
-
-func LoadMessages(path string) error {
-	return view.LoadMessages(path)
 }
 
 func NewBot(

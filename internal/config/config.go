@@ -5,6 +5,7 @@ import (
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
+	"github.com/jus1d/kypidbot/internal/config/messages"
 )
 
 const (
@@ -15,7 +16,7 @@ const (
 
 type Config struct {
 	Env      string   `yaml:"env" env-required:"true"`
-	Telegram Telegram `yaml:"telegram" env-required:"true"`
+	Bot      Bot      `yaml:"bot" env-required:"true"`
 	Ollama   Ollama   `yaml:"ollama" env-required:"true"`
 	Postgres Postgres `yaml:"postgres" env-required:"true"`
 }
@@ -26,8 +27,9 @@ type Ollama struct {
 	Model string `yaml:"model" env-required:"true"`
 }
 
-type Telegram struct {
-	Token string `yaml:"token" env-required:"true"`
+type Bot struct {
+	Token        string `yaml:"token" env-required:"true"`
+	MessagesPath string `yaml:"messages_path" env-required:"true"`
 }
 
 type Postgres struct {
@@ -60,9 +62,9 @@ func MustLoad() *Config {
 		panic("cannot read config: " + err.Error())
 	}
 
-	return &config
-}
+	if err = cleanenv.ReadConfig(config.Bot.MessagesPath, &messages.M); err != nil {
+		panic("cannot read messages: " + err.Error())
+	}
 
-func Empty() *Config {
-	return &Config{}
+	return &config
 }

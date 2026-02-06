@@ -26,11 +26,6 @@ func main() {
 
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})))
 
-	if err := telegram.LoadMessages("messages.yaml"); err != nil {
-		slog.Error("failed load message replics", sl.Err(err))
-		os.Exit(1)
-	}
-
 	db, err := postgres.New(&cfg.Postgres)
 	if err != nil {
 		slog.Error("postgresql: failed to connect", sl.Err(err))
@@ -50,7 +45,7 @@ func main() {
 	meeting := usecase.NewMeeting(userRepo, placeRepo, meetingRepo)
 
 	bot, err := telegram.NewBot(
-		cfg.Telegram.Token,
+		cfg.Bot.Token,
 		registration,
 		admin,
 		matching,

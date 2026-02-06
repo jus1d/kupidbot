@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/jus1d/kypidbot/internal/config/messages"
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
 	"github.com/jus1d/kypidbot/internal/domain"
 	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
@@ -41,5 +42,5 @@ func (h *Handler) Text(c tele.Context) error {
 
 	selected := domain.BinaryToSet(binaryStr)
 
-	return c.Send(view.Msg("about_received", "message"), view.TimeKeyboard(selected))
+	return c.Send(messages.M.Profile.About.Accepted, view.TimeKeyboard(selected))
 }
