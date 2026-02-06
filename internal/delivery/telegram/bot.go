@@ -20,7 +20,6 @@ type Bot struct {
 	matching     *usecase.Matching
 	meeting      *usecase.Meeting
 	users        domain.UserRepository
-	log          *slog.Logger
 }
 
 func LoadMessages(path string) error {
@@ -34,7 +33,6 @@ func NewBot(
 	matching *usecase.Matching,
 	meeting *usecase.Meeting,
 	users domain.UserRepository,
-	log *slog.Logger,
 ) (*Bot, error) {
 	pref := tele.Settings{
 		Token:  token,
@@ -53,7 +51,6 @@ func NewBot(
 		matching:     matching,
 		meeting:      meeting,
 		users:        users,
-		log:          log,
 	}, nil
 }
 
@@ -64,7 +61,6 @@ func (b *Bot) Setup() {
 		Matching:     b.matching,
 		Meeting:      b.meeting,
 		Bot:          b.bot,
-		Log:          b.log,
 	}
 
 	cb := &callback.Handler{
@@ -72,12 +68,10 @@ func (b *Bot) Setup() {
 		Meeting:      b.meeting,
 		Users:        b.users,
 		Bot:          b.bot,
-		Log:          b.log,
 	}
 
 	msg := &message.Handler{
 		Registration: b.registration,
-		Log:          b.log,
 	}
 
 	btnSexMale := tele.Btn{Unique: "sex_male"}
@@ -106,7 +100,7 @@ func (b *Bot) Setup() {
 }
 
 func (b *Bot) Start() {
-	b.log.Info("bot: ok")
+	slog.Info("bot: ok")
 	b.bot.Start()
 }
 

@@ -14,23 +14,23 @@ import (
 )
 
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
 
 	cfg := config.MustLoad()
 
 	if err := telegram.LoadMessages("messages.yaml"); err != nil {
-		log.Error("failed load message replics", sl.Err(err))
+		slog.Error("failed load message replics", sl.Err(err))
 		os.Exit(1)
 	}
 
 	db, err := postgres.New(&cfg.Postgres)
 	if err != nil {
-		log.Error("postgresql: failed to connect", sl.Err(err))
+		slog.Error("postgresql: failed to connect", sl.Err(err))
 		os.Exit(1)
 	}
 	defer db.Close()
 
-	log.Info("postgresql: ok", sl.Err(err))
+	slog.Info("postgresql: ok")
 
 	userRepo := postgres.NewUserRepo(db)
 	placeRepo := postgres.NewPlaceRepo(db)
@@ -48,10 +48,9 @@ func main() {
 		matching,
 		meeting,
 		userRepo,
-		log,
 	)
 	if err != nil {
-		log.Error("failed to create the bot", sl.Err(err))
+		slog.Error("failed to create the bot", sl.Err(err))
 		os.Exit(1)
 	}
 
@@ -63,6 +62,6 @@ func main() {
 	go bot.Start()
 
 	<-stop
-	log.Info("bot: shutting down...")
+	slog.Info("bot: shutting down...")
 	bot.Stop()
 }

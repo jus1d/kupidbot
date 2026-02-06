@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/jus1d/kypidbot/internal/delivery/telegram/view"
 	"github.com/jus1d/kypidbot/internal/lib/logger/sl"
@@ -15,7 +16,7 @@ func (h *Handler) MM(c tele.Context) error {
 	sticker := &tele.Sticker{File: tele.File{FileID: mmSticker}}
 	stickerMsg, err := h.Bot.Send(c.Chat(), sticker)
 	if err != nil {
-		h.Log.Error("send sticker", sl.Err(err))
+		slog.Error("send sticker", sl.Err(err))
 	}
 
 	result, err := h.Matching.RunMatch(context.Background())
@@ -23,7 +24,7 @@ func (h *Handler) MM(c tele.Context) error {
 		if stickerMsg != nil {
 			_ = h.Bot.Delete(stickerMsg)
 		}
-		h.Log.Error("run match", sl.Err(err))
+		slog.Error("run match", sl.Err(err))
 		return c.Send(view.Msg("mm", "not_enough_users"))
 	}
 
@@ -41,12 +42,12 @@ func (h *Handler) MM(c tele.Context) error {
 		"users":     fmt.Sprintf("%d", result.UsersCount),
 		"full_info": fullInfo,
 	}, "mm", "matched")); err != nil {
-		h.Log.Error("send match result", sl.Err(err))
+		slog.Error("send match result", sl.Err(err))
 	}
 
 	meetResult, err := h.Meeting.CreateMeetings(context.Background())
 	if err != nil {
-		h.Log.Error("create meetings", sl.Err(err))
+		slog.Error("create meetings", sl.Err(err))
 		if err.Error() == "no pairs" {
 			return c.Send(view.Msg("mm", "no_pairs"))
 		}
@@ -68,12 +69,12 @@ func (h *Handler) MM(c tele.Context) error {
 
 		_, err := h.Bot.Send(&tele.User{ID: m.DillID}, message, kb)
 		if err != nil {
-			h.Log.Error("send meeting to dill", sl.Err(err), "telegram_id", m.DillID)
+			slog.Error("send meeting to dill", sl.Err(err), "telegram_id", m.DillID)
 		}
 
 		_, err = h.Bot.Send(&tele.User{ID: m.DoeID}, message, kb)
 		if err != nil {
-			h.Log.Error("send meeting to doe", sl.Err(err), "telegram_id", m.DoeID)
+			slog.Error("send meeting to doe", sl.Err(err), "telegram_id", m.DoeID)
 		}
 
 		count++
@@ -90,12 +91,12 @@ func (h *Handler) MM(c tele.Context) error {
 
 		_, err := h.Bot.Send(&tele.User{ID: fm.DillTelegramID}, dillMsg)
 		if err != nil {
-			h.Log.Error("send full match to dill", sl.Err(err), "telegram_id", fm.DillTelegramID)
+			slog.Error("send full match to dill", sl.Err(err), "telegram_id", fm.DillTelegramID)
 		}
 
 		_, err = h.Bot.Send(&tele.User{ID: fm.DoeTelegramID}, doeMsg)
 		if err != nil {
-			h.Log.Error("send full match to doe", sl.Err(err), "telegram_id", fm.DoeTelegramID)
+			slog.Error("send full match to doe", sl.Err(err), "telegram_id", fm.DoeTelegramID)
 		}
 
 		count++
