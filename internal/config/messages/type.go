@@ -51,6 +51,7 @@ type RegistrationSection struct {
 
 type UISection struct {
 	Buttons ButtonsSection `yaml:"buttons" env-required:"true"`
+	Chosen  string         `yaml:"chosen" env-required:"true"`
 }
 
 type ButtonsSection struct {
