@@ -2,6 +2,8 @@ package domain
 
 import (
 	"context"
+	"crypto/rand"
+	"math/big"
 	"time"
 )
 
@@ -17,6 +19,7 @@ type User struct {
 	About                string
 	State                string
 	RegistrationNotified bool
+	InviteNotified       bool
 	TimeRanges           string
 	IsAdmin              bool
 	ReferralCode         string
@@ -44,4 +47,23 @@ type UserRepository interface {
 	SetReferrer(ctx context.Context, telegramID int64, referrerID int64) error
 	MarkNotified(ctx context.Context, telegramID int64) error
 	GetNotCompleted(ctx context.Context, interval time.Duration) ([]User, error)
+	GetForInviteReminder(ctx context.Context, interval time.Duration) ([]User, error)
+	MarkInviteNotified(ctx context.Context, telegramID int64) error
+}
+
+const (
+	referralCodeLen     = 8
+	referralCodeCharset = "abcdefghijklmnopqrstuvwxyz0123456789"
+)
+
+func GenerateReferralCode() (string, error) {
+	b := make([]byte, referralCodeLen)
+	for i := range b {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(referralCodeCharset))))
+		if err != nil {
+			return "", err
+		}
+		b[i] = referralCodeCharset[n.Int64()]
+	}
+	return string(b), nil
 }

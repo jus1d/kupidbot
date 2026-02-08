@@ -22,7 +22,7 @@ func (n *Notificator) RegisterReminder(ctx context.Context) error {
 			continue
 		}
 
-		content := messages.M.Profile.Reminder
+		content := messages.M.Notifications.Registration
 		if _, err := n.bot.Send(&tele.User{ID: u.TelegramID}, content); err != nil {
 			log.Error("notifications: send registration notification", sl.Err(err))
 		}

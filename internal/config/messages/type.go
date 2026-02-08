@@ -3,16 +3,17 @@ package messages
 var M Messages
 
 type Messages struct {
-	Start        StartSection        `yaml:"start" env-required:"true"`
-	Profile      ProfileSection      `yaml:"profile" env-required:"true"`
-	Command      CommandSection      `yaml:"command" env-required:"true"`
-	Registration RegistrationSection `yaml:"registration" env-required:"true"`
-	UI           UISection           `yaml:"ui" env-required:"true"`
-	Service      ServiceSection      `yaml:"service" env-required:"true"`
-	Admin        AdminSection        `yaml:"admin" env-required:"true"`
-	Error        ErrorSection        `yaml:"error" env-required:"true"`
-	Matching     MatchingSection     `yaml:"matching" env-required:"true"`
-	Meeting      MeetingSection      `yaml:"meeting" env-required:"true"`
+	Start         StartSection         `yaml:"start" env-required:"true"`
+	Notifications NotificationsSection `yaml:"notifications" env-required:"true"`
+	Profile       ProfileSection       `yaml:"profile" env-required:"true"`
+	Command       CommandSection       `yaml:"command" env-required:"true"`
+	Registration  RegistrationSection  `yaml:"registration" env-required:"true"`
+	UI            UISection            `yaml:"ui" env-required:"true"`
+	Service       ServiceSection       `yaml:"service" env-required:"true"`
+	Admin         AdminSection         `yaml:"admin" env-required:"true"`
+	Error         ErrorSection         `yaml:"error" env-required:"true"`
+	Matching      MatchingSection      `yaml:"matching" env-required:"true"`
+	Meeting       MeetingSection       `yaml:"meeting" env-required:"true"`
 }
 
 type BotSection struct {
@@ -25,11 +26,16 @@ type StartSection struct {
 	Welcome string `yaml:"welcome" env-required:"true"`
 }
 
+type NotificationsSection struct {
+	Registration string `yaml:"registration" env-required:"true"`
+	Invite       string `yaml:"invite" env-required:"true"`
+	MeetingSoon  string `yaml:"meeting_soon" env-required:"true"`
+}
+
 type ProfileSection struct {
 	Sex      SexOnboardingSection `yaml:"sex" env-required:"true"`
 	About    AboutSection         `yaml:"about" env-required:"true"`
 	Schedule ScheduleSection      `yaml:"schedule" env-required:"true"`
-	Reminder string               `yaml:"reminder" env-required:"true"`
 }
 
 type SexOnboardingSection struct {
@@ -133,10 +139,9 @@ type MatchingSuccess struct {
 }
 
 type MeetingSection struct {
-	Invite   MeetingInviteSection  `yaml:"invite" env-required:"true"`
-	Status   MeetingStatusSection  `yaml:"status" env-required:"true"`
-	Reminder string                `yaml:"reminder" env-required:"true"`
-	Special  MeetingSpecialSection `yaml:"special" env-required:"true"`
+	Invite  MeetingInviteSection  `yaml:"invite" env-required:"true"`
+	Status  MeetingStatusSection  `yaml:"status" env-required:"true"`
+	Special MeetingSpecialSection `yaml:"special" env-required:"true"`
 }
 
 type MeetingInviteSection struct {

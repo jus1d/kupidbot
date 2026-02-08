@@ -53,7 +53,7 @@ func (n *Notificator) MeetingReminder(ctx context.Context) error {
 			continue
 		}
 
-		msg := messages.Format(messages.M.Meeting.Reminder, map[string]string{
+		msg := messages.Format(messages.M.Notifications.MeetingSoon, map[string]string{
 			"place": place,
 			"time":  domain.Timef(*m.Time),
 		})

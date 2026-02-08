@@ -69,10 +69,11 @@ func main() {
 	notificator := notifications.New(&c.Notifications, bot.TeleBot(), userRepo, placeRepo, meetingRepo)
 	notificator.Register(notificator.MeetingReminder)
 	notificator.Register(notificator.RegisterReminder)
+	notificator.Register(notificator.InviteReminder)
 
 	go notificator.Run(ctx)
 	go bot.Start()
-	slog.Info("notifications: ok", slog.Duration("poll_interval", c.Notifications.PollInterval))
+	slog.Info("notifications: ok", slog.String("poll_interval", c.Notifications.PollInterval.String()))
 
 	<-stop
 	slog.Info("bot: shutting down...")

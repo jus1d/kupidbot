@@ -100,7 +100,7 @@ func (b *Bot) Setup() {
 }
 
 func (b *Bot) Start() {
-	slog.Info("bot: ok")
+	slog.Info("bot: ok", slog.String("username", b.bot.Me.Username))
 	b.bot.Start()
 }
 
