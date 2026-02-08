@@ -12,6 +12,7 @@ CREATE TABLE users (
     sex TEXT,
     about TEXT NOT NULL DEFAULT '',
     state TEXT NOT NULL DEFAULT 'start',
+    registration_notified BOOLEAN NOT NULL DEFAULT FALSE,
     time_ranges TEXT NOT NULL DEFAULT '000000',
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     referral_code TEXT UNIQUE,
@@ -31,9 +32,10 @@ CREATE TABLE meetings (
     pair_score DOUBLE PRECISION NOT NULL,
     is_fullmatch BOOLEAN NOT NULL DEFAULT FALSE,
     place_id INTEGER REFERENCES places(id),
-    time TEXT,
+    time TIMESTAMPTZ,
     dill_state confirmation_state NOT NULL DEFAULT 'not_confirmed',
-    doe_state confirmation_state NOT NULL DEFAULT 'not_confirmed'
+    doe_state confirmation_state NOT NULL DEFAULT 'not_confirmed',
+    users_notified BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- +goose Down
